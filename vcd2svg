@@ -1,0 +1,269 @@
+#!/usr/bin/awk -f
+
+function err(str) {
+	printf "vcd2svg: %s\n", str >"/dev/stderr"
+	error = 1
+	exit
+}
+
+function checksignals() {
+	for (i in signal)
+		if (!symbol[signal[i]])
+			err(signal[i] ": signal not found")
+}
+
+function btod(b,    p, a, i, n, s, d) {
+	if (b ~ /x/)
+		return "x"
+	s = 1
+	p = 1
+	n = split(b, a, "")
+	if (a[1] == "1") {
+		s = -1
+		for (i = 1; i <= n; i++) {
+			a[i] = a[i] == "1" ? "0" : "1"
+		}
+		for (i = n; i > 0; i--) {
+			if (a[i] == "0") {
+				a[i] = "1"
+				break;
+			} else {
+				a[i] = "0"
+			}
+		}
+	}
+	for (i = n; i > 0; i--) {
+		d += a[i] == "1" ? p : 0
+		p *= 2
+	}
+	return s * d
+}
+
+function btou(b,    p, a, i, n, s, d) {
+	if (b ~ /x/)
+		return "x"
+	p = 1
+	n = split(b, a, "")
+	for (i = n; i > 0; i--) {
+		d += a[i] == "1" ? p : 0
+		p *= 2
+	}
+	return d
+}
+
+function btoh(b, size,    h, len) {
+	while (length(b) < size)
+		b = (substr(b, 1, 1) == "x" ? "x" : "0") b
+	while (length(b) % 4)
+		b = "0" b
+	len = length(b) / 4
+	for (n = i = 1; i <= len; i++) {
+		a[i] = substr(b, n, 4)
+		n += 4
+	}
+	for (i = 1; i <= len; i++)
+		h = h (a[i] ~ /x/ ? "x" : btohtab[a[i]])
+	return h
+}
+
+function getval(sig, time,    ret) {
+	ret = val[symbol[sig], time]
+	if (ret ~ /z/)
+		return "z"
+	if (ret ~ /^s/)
+		return ret
+	sub(/^b/, "", ret)
+	if (format[sig] == "h")
+		return btoh(ret, size[symbol[sig]])
+	else if (format[sig] == "d")
+		return btod(ret)
+	else if (format[sig] == "u")
+		return btou(ret)
+	else if (format[sig] == "b" || size[symbol[sig]] < 4)
+		return ret
+	return btoh(ret, size[symbol[sig]])
+}
+
+function text(s, x, a) {
+	printf "\t\t<text x=\"%d\" y=\"0\" dominant-baseline=\"mathematical\" font-size=\"%dpx\" font-family=\"monospace\" text-anchor=\"%s\">\n", x, fontsize, a
+	printf "\t\t\t%s\n", s
+	printf "\t\t</text>\n"
+}
+
+function draw(val, x, n,    m, s) {
+	m = n / 2
+	n -= 3
+	if (val == "z") {
+		s = sprintf("M %d,0 l %d,0", x, n + 3)
+	} else if (val == "s1") {
+		s = sprintf("M %d,0 l 1.5,%d l %d,0 l 1.5,%d", x, -waveh, n, waveh)
+	} else if (val == "s0") {
+		s = sprintf("M %d,0 l 1.5,%d l %d,0 l 1.5,%d", x, waveh, n, -waveh)
+	} else {
+		s = sprintf("M %d,0 l 1.5,%d l %d,0 l 1.5,%d", x, waveh, n, -waveh)
+		if (val !~ /^0+$/)
+			s = s sprintf(" l -1.5,%d l %d,0 l -1.5,%d", -waveh, -n, waveh)
+		text(val, x + m, "middle")
+	}
+	printf "\t\t<path stroke=\"#000000\" stroke-width=\"1\" fill=\"none\" d=\"%s\"/>\n", s
+}
+
+function line(sig,    s, n, newval, oldval, oldx) {
+	n = itemh / 4
+	oldx = x = textw + pad
+	oldval = val[symbol[sig], from]
+	oldj = from
+	for (j = from + 1; j <= to; j++) {
+		x += unit
+		newval = val[symbol[sig], j]
+		if (newval && newval != oldval) {
+			draw(getval(sig, oldj), oldx, x - oldx)
+			oldval = newval
+			oldj = j
+			oldx = x
+		}
+	}
+	if (oldj != to)
+		draw(getval(sig, oldj), oldx, x - oldx)
+}
+
+function g(i,    x, y) {
+	x = pad
+	y = pad + i * (lead + itemh) - itemh / 2 - lead
+	printf "\t<g transform=\"translate(%d, %d)\">\n", x, y
+	text(signal[i], textw, "end")
+	line(signal[i])
+	printf "\t</g>\n"
+}
+
+function svg(width, height,    i) {
+	printf "<svg width=\"%d\" height=\"%d\">\n", width, height
+	for (i = 1; i <= nsignal; i++) {
+		g(i)
+	}
+	print "</svg>"
+}
+
+BEGIN {
+	if (!from) from = 0
+	if (!to) to = 10
+	if (!zoom) zoom = 1
+
+	if (zoom <= 0) error ("improper value for variable zoom: " zoom)
+	if (from < 0)  error ("improper value for variable from: " from)
+	if (to < from) error ("improper value for variable to: " to)
+
+	fontsize = 10
+	pad = 10
+	lead = 5
+	itemh = 20
+	textw = 100
+	waveh = itemh / 2
+	unit = 40 * zoom
+
+	btohtab["0000"] = "0"
+	btohtab["0001"] = "1"
+	btohtab["0010"] = "2"
+	btohtab["0011"] = "3"
+	btohtab["0100"] = "4"
+	btohtab["0101"] = "5"
+	btohtab["0110"] = "6"
+	btohtab["0111"] = "7"
+	btohtab["1000"] = "8"
+	btohtab["1001"] = "9"
+	btohtab["1010"] = "a"
+	btohtab["1011"] = "b"
+	btohtab["1100"] = "c"
+	btohtab["1101"] = "d"
+	btohtab["1110"] = "e"
+	btohtab["1111"] = "f"
+
+	for (i = 1; i < ARGC; i++) {
+		split(ARGV[i], a, ":")
+		signal[++nsignal] = a[1]
+		format[a[1]] = a[2]
+		ARGV[i] = ""
+	}
+}
+
+/\$(date|version|comment)/, /\$end/ {
+	next
+}
+
+/\$timescale/ {
+	if (NF > 1)
+		timescale = $2
+	else
+		timescalecheck = 1
+	next
+}
+
+/\$enddefinitions/ {
+	checksignals()
+	next
+}
+
+timescalecheck {
+	timescale = $1
+	timescalecheck = 0
+	next
+}
+
+$1 == "$scope" && $2 == "module" {
+	scope = scope (scope ? "." : "") $3
+
+	scope1 = scope
+	sub(/^[^.]+\./, "", scope1)
+
+	scope2 = scope
+	sub(/^[^.]+\.[^.]+\./, "", scope2)
+}
+
+$1 == "$upscope" {
+	sub(/\.[^.]+$/, "", scope)
+}
+
+$1 == "$var" {
+	var[++nvar] = scope "." $5
+	symbol[$5] = $4
+	symbol[scope "." $5] = $4
+	symbol[scope1 "." $5] = $4
+	symbol[scope2 "." $5] = $4
+	size[$4] = $3
+	next
+}
+
+/^#/ {
+	sub(/^#/, "")
+	time = $0
+	next
+}
+
+/^[01]/ {
+	if (time + 0 <= to + 0) {
+		sub(/^[01]/, "s& ")
+		val[$2, (time < from ? from : time)] = $1
+	}
+	next
+}
+
+/^b/ {
+	if (time + 0 <= to + 0) {
+		val[$2, (time < from ? from : time)] = $1
+	}
+	next
+}
+
+END {
+	if (error)
+		exit 1
+
+	if (nsignal == 0) {
+		for (i = 1; i <= nvar; i++)
+			print var[i]
+	} else {
+		width = pad * 3 + textw + unit * (to - from)
+		height = pad * 2 + (lead + itemh) * nsignal - lead
+		svg(width, height)
+	}
+}
