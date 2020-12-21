@@ -70,7 +70,7 @@ A svg image can be converted to png using inkscape:
 * The width of the space for variable names is hardcoded to 100 pixels.
   This width can be insufficient for a variable with a long name.
 
-* The label for the value of a variable may not fit in the wave pulse
-  for this value.  For example, a hexadecimal label for a 64-bit value
-  does may not fit in its pulse.  Setting the zoom to a value slightly
-  larger than 1 (such as 1.5) solves this.
+* The label for the value of a variable may not fit in a wave pulse.
+  For example, a hexadecimal label for a 64-bit value does not fit a
+  pulse.   Setting the zoom to a value slightly larger than 1 (such
+  as 1.5) solves this.
