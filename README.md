@@ -67,8 +67,8 @@ A svg image can be converted to png using inkscape:
 
 ## Bugs
 
-* The width of the space for variable names is hardcoded to 100 pixels,
-  and can get small for a variable with a long name.
+* The width of the space for variable names is hardcoded to 100 pixels.
+  This width can be insufficient for a variable with a long name.
 
 * The label for the value of a variable may not fit in the wave pulse
   for this value.  For example, a hexadecimal label for a 64-bit value
