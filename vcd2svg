@@ -90,7 +90,7 @@ function text(s, x, a) {
 	printf "\t\t</text>\n"
 }
 
-function draw(val, x, n,    m, s) {
+function pulse(val, x, n,    m, s) {
 	m = n / 2
 	n -= 3
 	if (val == "z") {
@@ -117,14 +117,14 @@ function line(sig,    s, n, newval, oldval, oldx) {
 		x += unit
 		newval = val[symbol[sig], j]
 		if (newval && newval != oldval) {
-			draw(getval(sig, oldj), oldx, x - oldx)
+			pulse(getval(sig, oldj), oldx, x - oldx)
 			oldval = newval
 			oldj = j
 			oldx = x
 		}
 	}
 	if (oldj != to)
-		draw(getval(sig, oldj), oldx, x - oldx)
+		pulse(getval(sig, oldj), oldx, x - oldx)
 }
 
 function g(i,    x, y) {
