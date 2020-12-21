@@ -1,8 +1,8 @@
-				vcd2svg
+# vcd2svg
 
 vcd2svg is a public domain vcd to svg converter written in AWK.
 
-# Usage
+## Usage
 
 After compiling and running the simulation, call vcd2svg with the vcd file
 as its input and redirecting its output to a svg file.  The variables that
@@ -52,7 +52,7 @@ The `-v` option needs to be given each time a variable is set.
 	$ vcd2svg -v from=10 -v to=20 -v zoom=1.4 clk data out 
 
 
-# Example
+## Example
 
 A unknown value (`x`) is drawn in the resulting svg file as a series of
 `x` characters.  High-impedance state (`z`) is drawn as a horizontal line.
@@ -65,7 +65,7 @@ A svg image can be converted to png using inkscape:
 	$ inkscape -z -b "#00000000" --export-filename sim.png sim.svg
 
 
-# Bugs
+## Bugs
 
 * The width of the space for variable names is hardcoded to 100 pixels,
   and can get small for a variable with a long name.
