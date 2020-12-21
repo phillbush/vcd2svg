@@ -31,23 +31,22 @@ When run without arguments, vcd2svg list all the variables in the input.
 
 Observe that the variables are listed prefixed with the period-delimited
 path of modules that contains it.  For example, the variable `clk` is
-used in the module `outer`; while the variable `a` is used in the module
-`inner`, which is instantiated by the module outer.   The full path of a
-variable can be used in the command-line arguments, for disambiguation,
-in the case which a name is used for more than one variable.
+used in the module `outer`; while the variable `acc` is used in the module
+`inner`, which is instantiated by the module `outer`.  The full path of a
+variable can be used in the command-line arguments, for disambiguation.
 
 	$ vcd2svg clk outer.inner.signal outer.inner.out <sim.vcd >sim.svg
 
 Variables can be set with the -v option, as in -v VARIABLE=VALUE.
-The following variables are supported by tbgen:
+The following variables are supported by vcd2svg:
 
 * `from`: Beginning time of the simulation.
 * `to`:   Duration of the simulation.
 * `zoom`: If between 0 and 1, zoom out; if larger than 1, zoom in.
 
-For example, the following command generates a svg image showing the
+For example, the following command generates a svg image with the
 waveform from time 10 to time 20, and sets the zoom factor to 1.4.
-The `-v` option needs to be given each time a variable is set.
+The `-v` option needs to be given before each variable.
 
 	$ vcd2svg -v from=10 -v to=20 -v zoom=1.4 clk data out 
 
