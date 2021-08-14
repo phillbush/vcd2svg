@@ -137,6 +137,7 @@ function g(i,    x, y) {
 }
 
 function svg(width, height,    i) {
+	printf "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
 	printf "<svg width=\"%d\" height=\"%d\">\n", width, height
 	for (i = 1; i <= nsignal; i++) {
 		g(i)
@@ -159,7 +160,7 @@ BEGIN {
 	itemh = 20
 	textw = 100
 	waveh = itemh / 2
-	unit = 40 * zoom
+	unit = 100 * zoom
 
 	btohtab["0000"] = "0"
 	btohtab["0001"] = "1"
