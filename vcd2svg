@@ -234,25 +234,27 @@ $1 == "$var" {
 	next
 }
 
-/^#/ {
-	sub(/^#/, "")
-	time = $0
-	next
-}
-
-/^[01]/ {
-	if (time + 0 <= to + 0) {
-		sub(/^[01]/, "s& ")
-		val[$2, (time < from ? from : time)] = $1
+{
+	for (i = 1; i <= NF; i++) {
+		if ($i ~ /^#/) {
+			sub(/^#/, "", $i)
+			time = $i
+		} else if ($i ~ /^[01]/) {
+			if (time + 0 <= to + 0) {
+				sub(/^[01]/, "s& ", $i)
+				$0 = $0
+				val[$(i+1), (time < from ? from : time)] = $i
+				i++
+			}
+		} else if ($1 ~ /^b/) {
+			if (time + 0 <= to + 0) {
+				sub(/^b[0-9]+/, "& ", $i)
+				$0 = $0
+				val[$(i+1), (time < from ? from : time)] = $i
+				i++
+			}
+		}
 	}
-	next
-}
-
-/^b/ {
-	if (time + 0 <= to + 0) {
-		val[$2, (time < from ? from : time)] = $1
-	}
-	next
 }
 
 END {
